@@ -1,0 +1,37 @@
+# --- Personal ---
+CLAUDE.md
+CLAUDE.local.md
+HINTS.md
+.claude/
+
+# --- .NET ---
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+*.db
+*.db-shm
+*.db-wal
+appsettings.*.local.json
+
+# --- Node / frontend ---
+node_modules/
+dist/
+.vite/
+coverage/
+*.local
+
+# --- Env / secrets ---
+.env
+.env.*
+!.env.example
+*.pfx
+*.publishsettings
+
+# --- Editors / OS ---
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
