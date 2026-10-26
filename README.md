@@ -1,40 +1,23 @@
 # ledger-lite
 
-A small accounts & transactions API in **ASP.NET Core (.NET 10) + EF Core + SQL Server**, with a React frontend, deployed on **Azure**.
+A small banking API (accounts, deposits, withdrawals, transfers) built with .NET and hosted on Azure.
 
-**How it's built**: the .NET backend (`api/`) is hand-written. The repo enforces that with a hook that blocks AI edits in `api/`.
-The tests, the React frontend and the CI drafts were AI-assisted, and reviewed by me.
+**Live:** https://ledgerlite-api-joao.azurewebsites.net/health
 
-## Architecture
-```
-React (Vite, Azure Static Web Apps)
-        │  HTTPS / JSON
-        ▼
-ASP.NET Core minimal API (Azure App Service, Linux)
-        │  EF Core
-        ▼
-Azure SQL Database   (local: SQL Server 2022 container)
-```
+## Where it is today
+- A health check endpoint, live on Azure.
+- Automatic deployment: every push to `main` builds the app, runs the tests, and deploys only if they pass.
+- A local SQL Server database running in Docker, ready for the next step.
 
-## API contract
-| Method | Route | Body | Returns |
-|---|---|---|---|
-| GET | `/health` | | `200 "ok"` |
-| POST | `/accounts` | `{ "owner": "Ana", "currency": "EUR" }` | `201` account |
-| GET | `/accounts` | | `200` list of accounts with balance |
-| GET | `/accounts/{id}` | | `200` account with balance, or `404` |
-| POST | `/accounts/{id}/transactions` | `{ "type": "Deposit" \| "Withdrawal", "amount": 100.00, "description": "..." }` | `201` transaction; `400` invalid amount; `409` insufficient funds |
-| GET | `/accounts/{id}/transactions` | | `200` list, newest first |
-| POST | `/transfers` | `{ "fromAccountId": 1, "toAccountId": 2, "amount": 50.00 }` | `201`; atomic (one DB transaction) |
-| GET | `/accounts/{id}/summary?month=2026-10` | | *(should)* totals by type for the month |
-
-Rules: amounts are `decimal`, > 0, max 2 decimals. Transfer between different accounts with the same currency only.
+## What's next
+1. Accounts and transactions stored in the database.
+2. Endpoints to create accounts, deposit, withdraw and transfer money.
+3. Transfers that are all-or-nothing: money never leaves one account without arriving in the other.
+4. Tests for the money rules (no negative amounts, no overdrafts).
+5. A cloud database, and a simple React page on top.
 
 ## Run locally
 ```bash
-docker run -d --name ledger-sql -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD='<your-local-pw>' -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
-cd api && dotnet user-secrets set "ConnectionStrings:Ledger" "Server=localhost,1433;Database=Ledger;User Id=sa;Password=<your-local-pw>;TrustServerCertificate=True" && cd ..
 dotnet run --project api
 dotnet test
-cd frontend && npm install && npm run dev
 ```
