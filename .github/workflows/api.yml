@@ -1,0 +1,46 @@
+name: api
+
+on:
+  push:
+    branches: [main]
+    paths: ['api/**', 'tests/**', 'LedgerLite.slnx', '.github/workflows/api.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  APP_NAME: ledgerlite-api-joao
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - run: dotnet restore LedgerLite.slnx
+      - run: dotnet build LedgerLite.slnx -c Release --no-restore
+      - run: dotnet test LedgerLite.slnx -c Release --no-build
+      - run: dotnet publish api/LedgerLite.Api.csproj -c Release --no-build -o publish
+      - uses: actions/upload-artifact@v5
+        with:
+          name: api
+          path: publish
+
+  deploy:
+    needs: build-test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: api
+          path: publish
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.APP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: publish
